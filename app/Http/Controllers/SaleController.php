@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Sale;
 use Illuminate\Http\Request;
 
 class SaleController extends Controller
@@ -9,9 +10,27 @@ class SaleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $tenant = $request->get('tenant');
+        
+        $sales = $tenant->sales()
+            ->with(['customer', 'user', 'saleItems'])
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('invoice_number', 'like', "%{$search}%")
+                      ->orWhereHas('customer', function ($cq) use ($search) {
+                          $cq->where('name', 'like', "%{$search}%");
+                      });
+                });
+            })
+            ->when($request->payment_status, function ($query, $status) {
+                $query->where('payment_status', $status);
+            })
+            ->latest()
+            ->paginate(15);
+
+        return view('sales.index', compact('sales'));
     }
 
     /**
@@ -19,7 +38,8 @@ class SaleController extends Controller
      */
     public function create()
     {
-        //
+        // To be implemented
+        return view('sales.create');
     }
 
     /**
@@ -27,7 +47,7 @@ class SaleController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // To be implemented
     }
 
     /**
@@ -35,7 +55,7 @@ class SaleController extends Controller
      */
     public function show(string $id)
     {
-        //
+        // To be implemented
     }
 
     /**
@@ -43,7 +63,7 @@ class SaleController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        // To be implemented
     }
 
     /**
@@ -51,7 +71,7 @@ class SaleController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        // To be implemented
     }
 
     /**
@@ -59,6 +79,6 @@ class SaleController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        // To be implemented
     }
 }
